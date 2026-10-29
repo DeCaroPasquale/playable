@@ -1,0 +1,1720 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La cassa di famiglia · Studio De Caro</title>
+<meta name="description" content="Il gioco di Studio De Caro: un minuto per scoprire quanto riesci a mettere da parte. Fai meglio di me?">
+<meta name="theme-color" content="#111923">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23111923'/%3E%3Cg transform='translate%2815 15%29 scale%28.7%29' fill='%23cdd5de'%3E%3Cpath d='M4 4H96V27H24V76H74V44H96V96H4Z'/%3E%3Crect x='43' y='42' width='23' height='23' rx='3'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="canonical" href="https://decaropasquale.github.io/playable/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="it_IT">
+<meta property="og:site_name" content="Studio De Caro">
+<meta property="og:title" content="La cassa di famiglia">
+<meta property="og:description" content="Il gioco di Studio De Caro: un minuto per scoprire quanto riesci a mettere da parte. Fai meglio di me?">
+<meta property="og:url" content="https://decaropasquale.github.io/playable/">
+<meta property="og:image" content="https://decaropasquale.github.io/playable/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="La cassa di famiglia, il gioco di Studio De Caro">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600&family=Sacramento&display=swap">
+<style>
+/* Layout: one-screen game. Brand + three-fund HUD above a libro-cassa play field; start (choose what you love) and result screens as overlays. Single dark look taken from the Studio De Caro sign. */
+:root {
+  --ink: #111923;
+  --panel: #172230;
+  --rule: #26354a;
+  --silver: #cdd5de;
+  --paper: #eef2f6;
+  --muted: #8d9aac;
+  --entrata: #86cdb0;
+  --uscita: #e5917f;
+  --annuali: #d8bb84;
+  --emergenze: #8cc4e8;
+  --ama: #c7a3ea;
+  --scrim: rgba(13, 19, 27, 0.9);
+  --font-script: "Sacramento", "Segoe Script", "Brush Script MT", cursive;
+  --font-ui: "Jost", "Futura", "Century Gothic", "Avenir Next", system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { height: 100%; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.45;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+button, a { font-family: inherit; }
+:focus-visible { outline: 2px solid var(--annuali); outline-offset: 2px; }
+
+.app {
+  position: relative;
+  height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 8px 12px;
+}
+
+/* ---------- HUD ---------- */
+.hud { display: grid; gap: 8px; padding-block: 2px 10px; }
+.hud-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand-mini { display: flex; align-items: center; gap: 8px; color: var(--silver); min-width: 0; }
+.brand-mini svg { width: 20px; height: 20px; flex: none; }
+.brand-mini span { font-family: var(--font-script); font-size: 25px; line-height: 1; color: var(--paper); white-space: nowrap; }
+.hud-actions { display: flex; gap: 6px; }
+.icon-btn {
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  border-radius: 10px;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--silver);
+  cursor: pointer;
+  padding: 0;
+}
+.icon-btn svg { width: 18px; height: 18px; }
+.icon-btn:hover { border-color: var(--muted); }
+.month-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.month-name { font-size: 22px; font-weight: 600; letter-spacing: 0.01em; }
+.month-note { font-size: 12px; color: var(--muted); letter-spacing: 0.03em; text-align: right; }
+.month-note.is-due { color: var(--annuali); }
+.progress { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; }
+.seg { height: 4px; border-radius: 2px; background: var(--rule); overflow: hidden; }
+.seg i { display: block; height: 100%; width: 0; background: var(--silver); }
+.seg.is-event { background: color-mix(in srgb, var(--annuali) 35%, var(--rule)); }
+.buckets { display: grid; grid-template-columns: 1.1fr 1.08fr 1fr; gap: 6px; }
+.bucket {
+  position: relative;
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 7px 9px 8px;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  min-width: 0;
+  transition: border-color 0.3s;
+}
+.b-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bucket-ann .b-label { color: var(--annuali); }
+.bucket-emerg .b-label { color: var(--emergenze); }
+.b-value { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; transition: color 0.3s; }
+.bucket-cassa .b-value { font-size: 18px; }
+.bucket-cassa.is-low { border-color: var(--uscita); }
+.bucket-cassa.is-low .b-value { color: var(--uscita); }
+.bucket.flash-up { border-color: var(--entrata); }
+.bucket.flash-down { border-color: var(--uscita); }
+.bump {
+  position: absolute; right: 8px; bottom: 9px;
+  font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
+  opacity: 0; pointer-events: none;
+}
+.bump--up { color: var(--entrata); }
+.bump--down { color: var(--uscita); }
+.bump.is-on { animation: bump 1.3s ease-out forwards; }
+@keyframes bump {
+  0% { opacity: 0; transform: translateY(4px); }
+  12% { opacity: 1; transform: none; }
+  75% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-5px); }
+}
+.hud-sub { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12.5px; min-height: 18px; }
+.love-line { display: flex; align-items: center; gap: 6px; color: var(--silver); min-width: 0; white-space: nowrap; }
+.love-line svg { width: 13px; height: 13px; flex: none; color: var(--ama); }
+.love-line b { color: var(--ama); font-weight: 600; font-variant-numeric: tabular-nums; }
+.rate-line { color: var(--uscita); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* ---------- Field ---------- */
+.field {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--panel);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.field canvas { display: block; width: 100%; height: 100%; }
+.toasts {
+  position: absolute; top: 40px; left: 10px; right: 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  pointer-events: none;
+}
+.toast {
+  max-width: 100%;
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--rule);
+  background: var(--scrim);
+  color: var(--paper);
+  font-size: 13px;
+  text-align: center;
+  animation: toast-in 0.22s ease-out;
+}
+.toast--out { border-color: color-mix(in srgb, var(--uscita) 55%, var(--rule)); }
+.toast--warn { border-color: var(--uscita); color: var(--uscita); }
+.toast.is-leaving { opacity: 0; transform: translateY(-4px); transition: opacity 0.2s, transform 0.2s; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+.banner {
+  position: absolute; left: 50%; top: 44%;
+  transform: translate(-50%, -50%);
+  width: min(300px, calc(100% - 32px));
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 18px 18px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--rule);
+  background: var(--ink);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
+  text-align: center;
+  animation: banner-in 0.25s ease-out;
+}
+@keyframes banner-in { from { opacity: 0; transform: translate(-50%, -46%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+.banner-kicker { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); }
+.banner-title { font-size: 19px; font-weight: 600; text-wrap: balance; }
+.banner-amount { font-size: 30px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.banner-note { font-size: 13px; color: var(--silver); text-wrap: balance; }
+.banner[data-tone="annuali"] { border-color: color-mix(in srgb, var(--annuali) 50%, var(--rule)); }
+.banner[data-tone="annuali"] .banner-amount { color: var(--annuali); }
+.banner[data-tone="in"] .banner-amount,
+.banner[data-tone="win"] .banner-amount { color: var(--entrata); }
+.banner[data-tone="imprevisto"] .banner-amount,
+.banner[data-tone="rosso"] .banner-amount { color: var(--uscita); }
+.banner[data-tone="rosso"] { border-color: var(--uscita); }
+.banner[data-tone="auto"] { border-color: var(--silver); }
+.banner[data-tone="auto"] .banner-amount { color: var(--silver); font-size: 24px; }
+
+/* ---------- Overlays ---------- */
+.overlay {
+  position: absolute; inset: 0;
+  z-index: 20;
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--ink);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px 0;
+}
+.overlay-inner {
+  width: 100%; max-width: 420px;
+  margin: auto;
+  display: flex; flex-direction: column; gap: 20px;
+  padding-bottom: 20px;
+}
+.overlay--soft { background: var(--scrim); justify-content: center; }
+
+.lockup { display: flex; align-items: center; gap: 12px; color: var(--silver); }
+.lockup-icon { width: 50px; height: 50px; flex: none; }
+.lockup-text { display: flex; flex-direction: column; min-width: 0; }
+.lockup-name { font-family: var(--font-script); font-size: 40px; line-height: 0.95; color: var(--paper); white-space: nowrap; }
+.lockup-rule { height: 2px; border-radius: 1px; background: var(--silver); opacity: 0.75; margin: 5px 0 5px -4px; }
+.lockup-tag { font-size: 12.5px; font-weight: 300; letter-spacing: 0.05em; color: var(--silver); white-space: nowrap; }
+.lockup--small .lockup-icon { width: 40px; height: 40px; }
+.lockup--small .lockup-name { font-size: 32px; }
+.lockup--small .lockup-tag { font-size: 11px; }
+
+.eyebrow { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.16em; color: var(--annuali); margin: 0; }
+.hero h1 {
+  margin: 6px 0 10px;
+  font-size: clamp(36px, 11vw, 46px);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.lede { margin: 0; color: var(--silver); max-width: 40ch; }
+.lede strong { color: var(--paper); font-weight: 600; }
+
+.legend { display: grid; gap: 10px; }
+.legend-row { display: grid; grid-template-columns: 56px 1fr; gap: 10px; align-items: start; }
+.legend-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); padding-top: 6px; }
+.minis { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.mini {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 9px;
+  border-radius: 8px;
+  border: 1.5px solid currentColor;
+  background: color-mix(in srgb, currentColor 13%, var(--ink));
+  font-size: 12.5px; font-weight: 500;
+  white-space: nowrap;
+}
+.mini svg { width: 12px; height: 12px; }
+.mini--in { color: var(--entrata); }
+.mini--ama { color: var(--ama); }
+.mini--ann { color: var(--annuali); }
+.mini--emerg { color: var(--emergenze); }
+.mini--auto { color: var(--silver); }
+.mini--out { color: var(--uscita); }
+.mini--rate { color: var(--uscita); border-style: dashed; }
+.legend-note { margin: 0; font-size: 13.5px; color: var(--silver); padding-top: 12px; border-top: 1px solid var(--rule); }
+.legend-note strong { color: var(--paper); font-weight: 500; }
+
+.sticky-cta {
+  position: sticky; bottom: 0;
+  margin-top: auto;
+  padding-block: 16px 14px;
+  background: linear-gradient(to bottom, transparent, var(--ink) 22px);
+  display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+  width: 100%; max-width: 420px; align-self: center;
+}
+.choose-title { margin: 0; font-size: 15px; font-weight: 500; text-align: center; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.choice {
+  display: flex; flex-direction: column; gap: 1px;
+  min-height: 58px;
+  padding: 9px 12px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--rule);
+  background: var(--panel);
+  color: var(--paper);
+  text-align: left;
+  cursor: pointer;
+}
+.choice b { display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; }
+.choice b svg { width: 13px; height: 13px; color: var(--ama); flex: none; }
+.choice span { font-size: 12px; color: var(--muted); }
+.choice:hover { border-color: var(--ama); }
+.hint { margin: 0; font-size: 12px; color: var(--muted); text-align: center; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 50px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--paper);
+  font-size: 16px; font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  text-align: center;
+}
+.btn:hover { border-color: var(--muted); }
+.btn--primary { background: var(--silver); border-color: var(--silver); color: var(--ink); font-weight: 600; }
+.btn--primary:hover { background: var(--paper); border-color: var(--paper); }
+.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* result */
+.result-head h2 {
+  margin: 6px 0 8px;
+  font-size: clamp(32px, 9.5vw, 40px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.result-head h2:focus { outline: none; }
+.result-head p { margin: 0; color: var(--silver); }
+.result-head .result-total { color: var(--paper); font-size: 17px; margin-bottom: 6px; text-wrap: pretty; }
+.record { margin-top: 6px !important; font-size: 12.5px; color: var(--muted) !important; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; margin: 0; }
+.stat { display: flex; flex-direction: column; gap: 1px; padding: 10px 0; border-top: 1px solid var(--rule); min-width: 0; }
+.stat dt { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+.stat dd { margin: 0; font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat--save dd { color: var(--entrata); }
+.stat--ama dt, .stat--ama dd { color: var(--ama); }
+.stat--neg dd { color: var(--uscita); }
+.tip {
+  padding: 16px 16px 15px;
+  border-radius: 14px;
+  border: 1px solid var(--rule);
+  background: var(--panel);
+  display: grid; gap: 6px;
+}
+.tip-kicker { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--annuali); margin: 0; }
+.tip h3 { margin: 0; font-size: 19px; font-weight: 600; line-height: 1.25; text-wrap: balance; }
+.tip p { margin: 0; color: var(--silver); font-size: 14.5px; }
+.tip .tip-impact { color: var(--uscita); font-size: 13px; }
+.book { display: grid; gap: 10px; }
+.book-lead { margin: 0; font-size: 17px; font-weight: 500; text-align: center; text-wrap: balance; }
+.status { min-height: 1.2em; margin: 0; font-size: 12.5px; color: var(--entrata); text-align: center; }
+.book-who { margin: -2px 0 2px; font-size: 12.5px; color: var(--muted); text-align: center; }
+.contact { display: grid; gap: 8px; padding: 14px; border-radius: 14px; border: 1px solid var(--rule); background: var(--panel); }
+.contact-title { margin: 0 0 2px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--annuali); }
+.contact-opt {
+  display: flex; align-items: center; gap: 12px;
+  min-height: 58px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--rule);
+  background: var(--ink);
+  color: var(--paper);
+  text-decoration: none;
+}
+.contact-opt:hover { border-color: var(--silver); }
+.contact-opt svg { width: 22px; height: 22px; flex: none; color: var(--silver); }
+.contact-opt span { display: flex; flex-direction: column; min-width: 0; }
+.contact-opt b { font-size: 15.5px; font-weight: 600; }
+.contact-opt small { font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+.who { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.who-opt {
+  min-height: 50px;
+  padding: 8px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--rule);
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 13.5px; font-weight: 500; line-height: 1.2;
+  cursor: pointer;
+}
+.who-opt:hover { border-color: var(--muted); }
+.who-opt[aria-pressed="true"] { border-color: var(--annuali); background: color-mix(in srgb, var(--annuali) 14%, var(--ink)); }
+.contact-opts { display: grid; gap: 8px; padding-top: 8px; }
+.story { display: grid; gap: 10px; padding-top: 4px; }
+.story-preview { display: grid; gap: 10px; justify-items: center; }
+.story-preview img { width: min(230px, 64%); max-width: 100%; aspect-ratio: 9 / 16; border-radius: 12px; border: 1px solid var(--rule); background: var(--panel); }
+.story-actions { display: grid; gap: 8px; width: 100%; }
+.copy-mail { justify-self: center; padding: 6px 8px; border: 0; background: none; color: var(--silver); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.copy-fallback { width: 100%; min-height: 84px; padding: 10px; border-radius: 10px; border: 1px solid var(--rule); background: var(--panel); color: var(--paper); font: 13px/1.4 var(--font-ui); resize: none; }
+.pause-card { width: min(320px, 100%); margin: 0 auto; display: grid; gap: 10px; text-align: center; padding: 22px 18px; border-radius: 16px; border: 1px solid var(--rule); background: var(--ink); }
+.pause-card h2 { margin: 0 0 6px; font-size: 24px; font-weight: 600; }
+
+@media (max-height: 680px) {
+  .hero h1 { font-size: 34px; margin-bottom: 8px; }
+  .overlay-inner { gap: 14px; }
+  .lockup-name { font-size: 34px; }
+  .lockup-icon { width: 42px; height: 42px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast, .banner { animation: none; }
+  .bucket, .b-value { transition: none; }
+  .bump.is-on { animation-name: bump-still; }
+  @keyframes bump-still { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21.2s-7.6-4.6-9.7-9.2C.9 8.7 2.9 4.8 6.7 4.8c2.2 0 3.7 1.3 5.3 3.3 1.6-2 3.1-3.3 5.3-3.3 3.8 0 5.8 3.9 4.4 7.2-2.1 4.6-9.7 9.2-9.7 9.2z"/></symbol>
+    <symbol id="i-logo" viewBox="0 0 100 100"><path d="M4 4H96V27H24V76H74V44H96V96H4Z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><rect x="43" y="42" width="23" height="23" rx="3" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+
+<div class="app" id="app">
+  <header class="hud" id="hud">
+    <div class="hud-top">
+      <div class="brand-mini" aria-label="Studio De Caro">
+        <svg aria-hidden="true"><use href="#i-logo"/></svg>
+        <span>Studio De Caro</span>
+      </div>
+      <div class="hud-actions">
+        <button class="icon-btn" id="btnSound" type="button" aria-label="Disattiva i suoni">
+          <svg id="icoSoundOn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+          <svg id="icoSoundOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M4 10v4h4l5 4V6L8 10H4z"/><path d="M17 9.5l5 5M22 9.5l-5 5"/></svg>
+        </button>
+        <button class="icon-btn" id="btnPause" type="button" aria-label="Metti in pausa">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6.5" y="5" width="3.6" height="14" rx="1.2"/><rect x="13.9" y="5" width="3.6" height="14" rx="1.2"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="month-row">
+      <span class="month-name" id="monthName">Gennaio</span>
+      <span class="month-note" id="monthNote">Mese 1 di 12</span>
+    </div>
+    <div class="progress" id="progress" aria-hidden="true"></div>
+    <div class="buckets">
+      <div class="bucket bucket-cassa" id="bCassa"><span class="b-label">Cassa</span><span class="b-value" id="vCassa">500 €</span><span class="bump" id="pCassa" aria-hidden="true"></span></div>
+      <div class="bucket bucket-ann" id="bAnn"><span class="b-label">Spese annuali</span><span class="b-value" id="vAnn">0 €</span><span class="bump" id="pAnn" aria-hidden="true"></span></div>
+      <div class="bucket bucket-emerg" id="bEmerg"><span class="b-label">Emergenze</span><span class="b-value" id="vEmerg">0 €</span><span class="bump" id="pEmerg" aria-hidden="true"></span></div>
+    </div>
+    <div class="hud-sub">
+      <span class="love-line"><svg aria-hidden="true"><use href="#i-heart"/></svg><span id="loveName">Per i viaggi</span><b id="loveVal">0 €</b></span>
+      <span class="rate-line" id="rateLine" hidden></span>
+    </div>
+  </header>
+
+  <main class="field" id="field">
+    <canvas id="cv" role="img" aria-label="Campo di gioco: la cassa raccoglie entrate, accantonamenti e spese per ciò che ami, e schiva le spese inutili e le rate"></canvas>
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+    <div class="banner" id="banner" role="status" hidden>
+      <span class="banner-kicker" id="bnKicker"></span>
+      <span class="banner-title" id="bnTitle"></span>
+      <span class="banner-amount" id="bnAmount"></span>
+      <span class="banner-note" id="bnNote"></span>
+    </div>
+  </main>
+
+  <!-- Start -->
+  <section class="overlay" id="startScreen" aria-labelledby="startTitle">
+    <div class="overlay-inner">
+      <div class="lockup">
+        <svg class="lockup-icon" aria-hidden="true"><use href="#i-logo"/></svg>
+        <div class="lockup-text">
+          <span class="lockup-name">Studio De Caro</span>
+          <span class="lockup-rule"></span>
+          <span class="lockup-tag">tax and corporate consulting</span>
+        </div>
+      </div>
+
+      <div class="hero">
+        <p class="eyebrow">Un anno in un minuto</p>
+        <h1 id="startTitle">La cassa di famiglia</h1>
+        <p class="lede">Stipendio di <strong>1.700 € al mese</strong>, spese fisse di 1.350 € tra casa, bollette e spesa. Puoi goderti la vita e mettere da parte? In un minuto lo scopri.</p>
+      </div>
+
+      <div class="legend">
+        <div class="legend-row">
+          <span class="legend-label">Prendi</span>
+          <div class="minis">
+            <span class="mini mini--in">+ Entrate extra</span>
+            <span class="mini mini--ama"><svg aria-hidden="true"><use href="#i-heart"/></svg>Ciò che ami</span>
+            <span class="mini mini--ann">+ Spese annuali</span>
+            <span class="mini mini--emerg">+ Emergenze</span>
+            <span class="mini mini--auto"><svg aria-hidden="true"><use href="#i-logo"/></svg>Automatizza</span>
+          </div>
+        </div>
+        <div class="legend-row">
+          <span class="legend-label">Schiva</span>
+          <div class="minis">
+            <span class="mini mini--out">− Spese inutili</span>
+            <span class="mini mini--rate">− Rate</span>
+          </div>
+        </div>
+        <p class="legend-note">Assicurazione, vacanze e regali arrivano ogni anno: pagali con il fondo <strong>spese annuali</strong>. I soldi lasciati fermi in cassa si consumano in spese non tracciate.</p>
+      </div>
+    </div>
+    <div class="sticky-cta">
+      <p class="choose-title">Per cosa ami spendere? Scegli e si parte</p>
+      <div class="choices" id="choices">
+        <button class="choice" type="button" data-love="viaggi"><b><svg aria-hidden="true"><use href="#i-heart"/></svg>Viaggi</b><span>Weekend, voli, gite</span></button>
+        <button class="choice" type="button" data-love="cene"><b><svg aria-hidden="true"><use href="#i-heart"/></svg>Cene e amici</b><span>Pizza, ristoranti</span></button>
+        <button class="choice" type="button" data-love="sport"><b><svg aria-hidden="true"><use href="#i-heart"/></svg>Sport</b><span>Palestra, padel, spa</span></button>
+        <button class="choice" type="button" data-love="famiglia"><b><svg aria-hidden="true"><use href="#i-heart"/></svg>Famiglia</b><span>Gite, cinema, feste</span></button>
+      </div>
+      <p class="hint">Trascina il dito per muovere la cassa. Da computer usa le frecce ← →.</p>
+    </div>
+  </section>
+
+  <!-- Result -->
+  <section class="overlay" id="resultScreen" aria-labelledby="rProfile" hidden>
+    <div class="overlay-inner">
+      <div class="lockup lockup--small">
+        <svg class="lockup-icon" aria-hidden="true"><use href="#i-logo"/></svg>
+        <div class="lockup-text">
+          <span class="lockup-name">Studio De Caro</span>
+          <span class="lockup-rule"></span>
+          <span class="lockup-tag">tax and corporate consulting</span>
+        </div>
+      </div>
+
+      <div class="result-head">
+        <p class="eyebrow">Il tuo anno con 1.700 € al mese</p>
+        <h2 id="rProfile" tabindex="-1">CFO di famiglia</h2>
+        <p class="result-total" id="rTotal"></p>
+        <p id="rDesc"></p>
+        <p class="record" id="rRecord" hidden></p>
+      </div>
+
+      <dl class="stats" id="rStats"></dl>
+
+      <div class="tip">
+        <p class="tip-kicker">Il consiglio dello studio</p>
+        <h3 id="tipTitle"></h3>
+        <p id="tipBody"></p>
+        <p class="tip-impact" id="tipImpact" hidden></p>
+      </div>
+
+      <div class="book">
+        <p class="book-lead">Con 1.700 € al mese ce la puoi fare. Costruiamo insieme il tuo piano.</p>
+        <button class="btn btn--primary" id="btnAdvice" type="button" aria-expanded="false" aria-controls="contactPanel">Ascolta i consigli di Pasquale De Caro</button>
+        <p class="book-who">Dottore Commercialista a Napoli</p>
+        <div class="contact" id="contactPanel" hidden>
+          <p class="contact-title" id="whoTitle">Prima una domanda: sei…</p>
+          <div class="who" id="whoGroup" role="group" aria-labelledby="whoTitle">
+            <button class="who-opt" type="button" data-who="dipendente" aria-pressed="false">Dipendente</button>
+            <button class="who-opt" type="button" data-who="professionista" aria-pressed="false">Libero professionista</button>
+            <button class="who-opt" type="button" data-who="imprenditore" aria-pressed="false">Imprenditore</button>
+          </div>
+          <div class="contact-opts" id="contactOpts" hidden>
+          <p class="contact-title">Come preferisci parlarne?</p>
+          <a class="contact-opt" id="ctCal" href="https://cal.com/pasqualedecaro/cfo" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M8 14h3M8 17h6"/></svg>
+            <span><b>Prenota una chiamata</b><small>Scegli tu giorno e ora sul calendario</small></span>
+          </a>
+          <a class="contact-opt" id="ctWa" href="https://wa.me/393288038318" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 11.6a8.4 8.4 0 0 1-12.4 7.4L3.5 20.5l1.6-4.4A8.4 8.4 0 1 1 20.5 11.6z"/><path d="M8.5 10.5h7M8.5 13.5h4.5"/></svg>
+            <span><b>Scrivi su WhatsApp</b><small>Il messaggio con il tuo risultato è già pronto</small></span>
+          </a>
+          <a class="contact-opt" id="ctMail" href="mailto:pasqualedecaro@live.it">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3.5 7l8.5 6 8.5-6"/></svg>
+            <span><b>Scrivi una email</b><small>pasqualedecaro@live.it</small></span>
+          </a>
+          <button class="copy-mail" id="btnCopyMail" type="button">Copia l'indirizzo email</button>
+          <p class="status" id="contactStatus" aria-live="polite"></p>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="btnAgain" type="button">Rigioca</button>
+          <button class="btn" id="btnShare" type="button">Condividi</button>
+        </div>
+        <p class="status" id="shareStatus" aria-live="polite"></p>
+        <textarea class="copy-fallback" id="copyFallback" readonly hidden aria-label="Testo del risultato da copiare"></textarea>
+        <div class="story">
+          <button class="btn" id="btnStory" type="button">Crea l'immagine per le storie</button>
+          <div class="story-preview" id="storyPreview" hidden>
+            <img id="storyImg" alt="Immagine del tuo risultato da pubblicare nelle storie">
+            <div class="story-actions">
+              <button class="btn btn--primary" id="btnStoryShare" type="button" hidden>Condividi l'immagine</button>
+              <button class="btn" id="btnStoryDownload" type="button" hidden>Scarica l'immagine</button>
+              <p class="hint" id="storyHint"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pause -->
+  <section class="overlay overlay--soft" id="pauseScreen" hidden aria-labelledby="pauseTitle">
+    <div class="pause-card">
+      <h2 id="pauseTitle">In pausa</h2>
+      <button class="btn btn--primary" id="btnResume" type="button">Riprendi</button>
+      <button class="btn" id="btnRestart" type="button">Ricomincia da gennaio</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ---------- Regole del gioco ---------- */
+  const MONTHS = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+  const MONTH_LEN = 4.0;          // secondi per mese: circa un minuto in tutto
+  const BANNER = 1.5;             // secondi di pausa sugli eventi
+  const START_CASSA = 500;
+  const STIPENDIO = 1700;
+  const TREDICESIMA = 1700;
+  const FISSI = 1350;             // casa, bollette, spesa
+  const QUOTA = 150;              // accantonamento per gettone
+  const AUTO_ANN = 150;           // pilota automatico: al fondo spese annuali
+  const AUTO_EMERG = 50;          // pilota automatico: alle emergenze
+  const LEAK_FLOOR = 500;         // sopra questa soglia la cassa si consuma
+  const LEAK_RATE = 0.15;
+  const EVENTS = {
+    2:  { kind: 'annual', amt: 450, title: 'Assicurazione auto', short: 'assicurazione' },
+    6:  { kind: 'in',     amt: 250, title: 'Rimborso 730',       short: 'rimborso 730' },
+    7:  { kind: 'annual', amt: 700, title: 'Vacanze d’agosto', short: 'vacanze' },
+    11: { kind: 'annual', amt: 400, title: 'Regali di Natale',   short: 'regali' }
+  };
+  const IMPREVISTO_MONTHS = [1, 3, 4, 5, 8, 9, 10];
+  const AUTO_OFFERS = [1, 4, 8];
+
+  const LOVES = {
+    viaggi:   { per: 'per i viaggi',        hud: 'Per i viaggi',        items: [['Weekend fuori', 180], ['Volo low cost', 90], ['Gita al mare', 50], ['Treno per la gita', 40]] },
+    cene:     { per: 'per cene e amici',    hud: 'Per cene e amici',    items: [['Pizza con gli amici', 25], ['Cena al ristorante', 70], ['Aperitivo', 15], ['Sushi del venerdì', 45]] },
+    sport:    { per: 'per lo sport',        hud: 'Per lo sport',        items: [['Palestra', 45], ['Partita di padel', 15], ['Scarpe da corsa', 110], ['Giornata alla spa', 80]] },
+    famiglia: { per: 'per la famiglia',     hud: 'Per la famiglia',     items: [['Gita con i bambini', 60], ['Cinema in famiglia', 40], ['Festa di compleanno', 120], ['Pranzo fuori la domenica', 70]] }
+  };
+  const POOLS = {
+    income: [['Straordinari', 120], ['Vendita usato', 80], ['Lavoretto extra', 200], ['Cashback', 30], ['Regalo di compleanno', 50]],
+    junk: [["Acquisto d'impulso", 90], ['Abbonamento dimenticato', 30], ['Offerta imperdibile', 120], ['Commissioni sul conto', 15], ['Gadget mai usato', 150], ['Penale per ritardo', 40]],
+    junkDec: [["Regalo dell'ultimo minuto", 60]],
+    rate: [['Smartphone a rate', 35], ['Compra ora, paga dopo', 45], ['Divano a rate', 60], ['Carta revolving', 50]]
+  };
+  const IMPREVISTI = [["Guasto all'auto", 550], ['Lavatrice rotta', 400], ['Dentista', 350], ['Caldaia da riparare', 300], ['Smartphone rotto', 250]];
+
+  const TIPS = {
+    annuali: { h: 'Le spese annuali non sono imprevisti.', b: 'Assicurazione, vacanze, regali: sai già quando arrivano. Somma quanto ti costano in un anno, dividi per dodici e metti da parte quella cifra ogni mese.' },
+    spreco:  { h: 'Spendi senza sensi di colpa per ciò che ami. Taglia il resto.', b: 'Abbonamenti dimenticati, commissioni e acquisti d’impulso non ti cambiano la vita. Toglili, e i soldi per ciò che conta ci sono.' },
+    rate:    { h: 'Le rate si mangiano gli stipendi futuri.', b: 'Prima di comprare a rate guarda il costo totale, non solo la rata. Se hai già dei debiti, chiudi per primo quello che costa di più.' },
+    emerg:   { h: 'L’imprevisto è l’unica spesa sicura.', b: 'Un fondo emergenze pari ad alcuni mesi di spese fisse trasforma un guasto in un fastidio, non in una crisi.' },
+    auto:    { h: 'Automatizza: i soldi fermi sul conto spariscono.', b: 'Il giorno dello stipendio fai partire bonifici automatici verso i tuoi fondi. Sul conto resta solo quello che puoi spendere, senza doverci pensare.' },
+    love:    { h: 'Un piano non serve a vivere di rinunce.', b: 'Hai messo da parte, ma non hai speso nulla per ciò che ami. Un buon piano serve proprio a questo: spendere per ciò che conta, senza sensi di colpa.' },
+    ok:      { h: 'Hai un piano. Ora portalo nella vita vera.', b: 'Un conto per le spese, un fondo per le spese annuali, uno per le emergenze e bonifici automatici il giorno dello stipendio. Fuori dal gioco funziona allo stesso modo.' }
+  };
+
+  /* ---------- Utilità ---------- */
+  const $ = (id) => document.getElementById(id);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const inFrame = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+  function num(n) { return String(Math.round(Math.abs(n))).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+  function eur(n, sign) {
+    const v = num(n) + ' €';
+    if (sign === '+') return '+' + v;
+    if (sign === '-') return '−' + v;
+    return (n < 0 ? '−' : '') + v;
+  }
+  function store(key, val) {
+    try {
+      if (val === undefined) return window.localStorage.getItem(key);
+      window.localStorage.setItem(key, String(val));
+    } catch (e) { return null; }
+    return null;
+  }
+
+  const css = getComputedStyle(document.documentElement);
+  const tok = (n) => css.getPropertyValue(n).trim();
+  const C = {
+    ink: tok('--ink'), panel: tok('--panel'), rule: tok('--rule'), silver: tok('--silver'), paper: tok('--paper'), muted: tok('--muted'),
+    income: tok('--entrata'), love: tok('--ama'), junk: tok('--uscita'), rate: tok('--uscita'), ann: tok('--annuali'), emerg: tok('--emergenze'), auto: tok('--silver')
+  };
+  function rgba(hex, a) {
+    const h = hex.replace('#', '');
+    const n = parseInt(h.length === 3 ? h.split('').map((c) => c + c).join('') : h, 16);
+    return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+  }
+  const FONT = '"Jost","Futura","Century Gothic",system-ui,sans-serif';
+  const F_AMT = `600 15px ${FONT}`;
+  const F_LBL = `400 11px ${FONT}`;
+  const F_HDR = `500 10px ${FONT}`;
+  const F_FLOAT = `600 16px ${FONT}`;
+  const F_BOX = `600 11px ${FONT}`;
+  const ICON_OUTER = new Path2D('M4 4H96V27H24V76H74V44H96V96H4Z');
+  const ICON_INNER = new Path2D('M43 42H66V65H43Z');
+  const HEART = new Path2D('M12 21.2s-7.6-4.6-9.7-9.2C.9 8.7 2.9 4.8 6.7 4.8c2.2 0 3.7 1.3 5.3 3.3 1.6-2 3.1-3.3 5.3-3.3 3.8 0 5.8 3.9 4.4 7.2-2.1 4.6-9.7 9.2-9.7 9.2z');
+
+  /* ---------- Audio ---------- */
+  let AC = null;
+  let muted = store('afm_mute') === '1';
+  function initAudio() {
+    if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { AC = null; } }
+    if (AC && AC.state === 'suspended') AC.resume().catch(() => {});
+  }
+  function tone(f, dur, type, vol, delay, slideTo) {
+    if (!AC || muted) return;
+    const t0 = AC.currentTime + (delay || 0);
+    const o = AC.createOscillator();
+    const g = AC.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(f, t0);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol || 0.06, t0 + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g).connect(AC.destination);
+    o.start(t0);
+    o.stop(t0 + dur + 0.03);
+  }
+  function sfx(k) {
+    switch (k) {
+      case 'in':    tone(660, 0.12, 'sine', 0.06); tone(990, 0.16, 'sine', 0.05, 0.06); break;
+      case 'love':  tone(587, 0.14, 'sine', 0.05); tone(880, 0.2, 'sine', 0.045, 0.07); break;
+      case 'out':   tone(240, 0.2, 'triangle', 0.08, 0, 140); break;
+      case 'save':  tone(784, 0.25, 'sine', 0.05); tone(1175, 0.3, 'sine', 0.04, 0.08); break;
+      case 'auto':  [523, 784, 1047, 1568].forEach((f, i) => tone(f, 0.22, 'sine', 0.045, i * 0.07)); break;
+      case 'month': tone(1320, 0.08, 'sine', 0.025); break;
+      case 'bill':  tone(330, 0.25, 'triangle', 0.07); tone(247, 0.35, 'triangle', 0.07, 0.18); break;
+      case 'hit':   tone(180, 0.35, 'sawtooth', 0.035, 0, 100); break;
+      case 'lose':  [392, 330, 262, 196].forEach((f, i) => tone(f, 0.3, 'triangle', 0.07, i * 0.16)); break;
+      case 'win':   [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.28, 'sine', 0.06, i * 0.12)); break;
+    }
+  }
+  function renderSound() {
+    $('icoSoundOn').hidden = muted;
+    $('icoSoundOff').hidden = !muted;
+    $('btnSound').setAttribute('aria-label', muted ? 'Attiva i suoni' : 'Disattiva i suoni');
+  }
+
+  /* ---------- Stato ---------- */
+  const field = $('field');
+  const cv = $('cv');
+  const ctx = cv.getContext('2d');
+  let W = 360, H = 520, DPR = 1;
+  const P = { x: 180, tx: 180, y: 460, w: 92, h: 40 };
+  let loveKey = 'viaggi';
+  let S = freshState(false);
+
+  function freshState(running) {
+    const pool = IMPREVISTO_MONTHS.slice();
+    const months = [];
+    for (let i = 0; i < 2; i++) months.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    return {
+      running, paused: false, over: false,
+      month: 0, mt: 0,
+      saldo: START_CASSA, ann: 0, emerg: 0, rate: 0,
+      auto: false, autoMonth: -1, autoOffered: {},
+      chips: [], floats: [], parts: [],
+      spawnT: 0.5, freeze: 0, freezeAge: 0, afterFreeze: null,
+      imprevMonths: months, imprevDone: false, imprevPool: IMPREVISTI.slice(),
+      keys: { l: 0, r: 0 },
+      won: false, leakExplained: false,
+      stats: { entrate: 0, extra: 0, love: 0, junk: 0, junkN: 0, rateSpent: 0, rateN: 0, leak: 0, imprevCassa: 0, annCassa: 0 }
+    };
+  }
+
+  /* ---------- HUD ---------- */
+  const progress = $('progress');
+  const segs = [];
+  for (let i = 0; i < 12; i++) {
+    const s = document.createElement('span');
+    s.className = 'seg' + (EVENTS[i] ? ' is-event' : '');
+    const fill = document.createElement('i');
+    s.appendChild(fill);
+    progress.appendChild(s);
+    segs.push(fill);
+  }
+  const last = { saldo: null, ann: null, emerg: null, rate: null, love: null };
+  function flash(el, up) {
+    if (reduceMotion) return;
+    el.classList.remove('flash-up', 'flash-down');
+    void el.offsetWidth;
+    el.classList.add(up ? 'flash-up' : 'flash-down');
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.remove('flash-up', 'flash-down'), 320);
+  }
+  function bump(id, amount) {
+    const el = $(id);
+    el.textContent = (amount >= 0 ? '+' : '−') + num(amount);
+    el.className = 'bump ' + (amount >= 0 ? 'bump--up' : 'bump--down');
+    void el.offsetWidth;
+    el.classList.add('is-on');
+  }
+  function updateHUD() {
+    if (last.saldo !== S.saldo) {
+      if (last.saldo !== null) flash($('bCassa'), S.saldo > last.saldo);
+      $('vCassa').textContent = eur(S.saldo);
+      $('bCassa').classList.toggle('is-low', S.saldo < 250);
+      last.saldo = S.saldo;
+    }
+    if (last.ann !== S.ann) {
+      if (last.ann !== null) flash($('bAnn'), S.ann > last.ann);
+      $('vAnn').textContent = eur(S.ann);
+      last.ann = S.ann;
+    }
+    if (last.emerg !== S.emerg) {
+      if (last.emerg !== null) flash($('bEmerg'), S.emerg > last.emerg);
+      $('vEmerg').textContent = eur(S.emerg);
+      last.emerg = S.emerg;
+    }
+    if (last.love !== S.stats.love) {
+      $('loveVal').textContent = eur(S.stats.love);
+      last.love = S.stats.love;
+    }
+    if (last.rate !== S.rate) {
+      $('rateLine').hidden = S.rate === 0;
+      $('rateLine').textContent = `Rate ${eur(S.rate, '-')}/mese`;
+      last.rate = S.rate;
+    }
+  }
+  function updateMonthUI() {
+    const m = S.month;
+    $('monthName').textContent = MONTHS[m];
+    const note = $('monthNote');
+    const ev = EVENTS[m];
+    note.textContent = ev ? `A fine mese: ${ev.short}` : `Mese ${m + 1} di 12`;
+    note.classList.toggle('is-due', !!ev);
+  }
+  function updateProgress() {
+    for (let i = 0; i < 12; i++) {
+      const p = i < S.month ? 1 : i === S.month ? clamp(S.mt / MONTH_LEN, 0, 1) : 0;
+      segs[i].style.width = (p * 100).toFixed(1) + '%';
+    }
+  }
+
+  /* ---------- Messaggi ---------- */
+  const toastBox = $('toasts');
+  let toastQ = [];
+  let toastBusy = false;
+  let toastGen = 0;
+  function toast(msg, tone) {
+    if (toastQ.length > 1) toastQ.shift();
+    toastQ.push({ msg, tone });
+    if (!toastBusy) nextToast();
+  }
+  function nextToast() {
+    const gen = toastGen;
+    const t = toastQ.shift();
+    if (!t) { toastBusy = false; return; }
+    toastBusy = true;
+    const el = document.createElement('div');
+    el.className = 'toast' + (t.tone ? ' toast--' + t.tone : '');
+    el.textContent = t.msg;
+    toastBox.appendChild(el);
+    setTimeout(() => {
+      if (gen !== toastGen) return;
+      el.classList.add('is-leaving');
+      setTimeout(() => { el.remove(); if (gen === toastGen) nextToast(); }, 200);
+    }, toastQ.length ? 1300 : 1800);
+  }
+  function clearToasts() {
+    toastGen++;
+    toastQ = [];
+    toastBusy = false;
+    toastBox.textContent = '';
+  }
+
+  const banner = $('banner');
+  function showBanner(o, dur, after) {
+    $('bnKicker').textContent = o.kicker || '';
+    $('bnTitle').textContent = o.title || '';
+    $('bnAmount').textContent = o.amount || '';
+    $('bnNote').textContent = o.note || '';
+    banner.dataset.tone = o.tone || '';
+    banner.hidden = false;
+    S.freeze = dur;
+    S.freezeAge = 0;
+    S.afterFreeze = after || null;
+  }
+
+  /* ---------- Svolgimento dell'anno ---------- */
+  function monthStart(m) {
+    S.month = m;
+    S.mt = 0;
+    S.imprevDone = false;
+    const inc = STIPENDIO + (m === 11 ? TREDICESIMA : 0);
+    S.saldo += inc;
+    S.stats.entrate += inc;
+    bump('pCassa', inc);
+    if (m === 11) toast(`Tredicesima: ${eur(TREDICESIMA, '+')}`);
+    if (S.auto) {
+      const a = Math.min(AUTO_ANN, S.saldo);
+      S.saldo -= a; S.ann += a;
+      const e = Math.min(AUTO_EMERG, S.saldo);
+      S.saldo -= e; S.emerg += e;
+      setTimeout(() => { if (S.running) { bump('pAnn', a); bump('pEmerg', e); } }, 350);
+    }
+    sfx('month');
+    updateMonthUI();
+    updateHUD();
+  }
+
+  function monthEnd() {
+    const m = S.month;
+    S.mt = MONTH_LEN;
+    const rate = S.rate;
+    S.saldo -= FISSI + rate;
+    S.stats.rateSpent += rate;
+    const leak = Math.max(0, Math.round(((S.saldo - LEAK_FLOOR) * LEAK_RATE) / 10) * 10);
+    S.saldo -= leak;
+    S.stats.leak += leak;
+    bump('pCassa', -(FISSI + rate + leak));
+    if (leak >= 40 && (!S.leakExplained || leak >= 150)) {
+      S.leakExplained = true;
+      toast(`Soldi fermi in cassa: ${eur(leak, '-')} in spese non tracciate`, 'out');
+    }
+    updateHUD();
+    const next = () => {
+      if (!cover()) return;
+      if (m === 11) finish();
+      else monthStart(m + 1);
+    };
+    const ev = EVENTS[m];
+    if (ev && ev.kind === 'annual') payAnnual(ev, next);
+    else if (ev && ev.kind === 'in') {
+      S.saldo += ev.amt;
+      S.stats.entrate += ev.amt;
+      updateHUD();
+      sfx('in');
+      showBanner({ kicker: 'In busta paga', title: ev.title, amount: eur(ev.amt, '+'), note: 'Medico, farmacia, scuola: con il 730 una parte delle spese ti torna indietro.', tone: 'in' }, BANNER, next);
+    } else next();
+  }
+
+  function payAnnual(ev, then) {
+    const fromA = Math.min(S.ann, ev.amt);
+    const rest = ev.amt - fromA;
+    S.ann -= fromA;
+    S.saldo -= rest;
+    S.stats.annCassa += rest;
+    let note;
+    if (rest === 0) note = 'Pagata tutta con il fondo spese annuali. Nessuna sorpresa.';
+    else if (fromA > 0) note = `${eur(fromA)} dal fondo spese annuali, ${eur(rest)} dalla cassa.`;
+    else note = `Pagata tutta dalla cassa. Bastava mettere da parte ${eur(Math.ceil(ev.amt / 12 / 5) * 5)} al mese.`;
+    updateHUD();
+    sfx('bill');
+    showBanner({ kicker: 'Spesa annuale', title: ev.title, amount: eur(ev.amt, '-'), note, tone: 'annuali' }, BANNER, then);
+  }
+
+  function imprevisto() {
+    const i = Math.floor(Math.random() * S.imprevPool.length);
+    const [label, amt] = S.imprevPool.splice(i, 1)[0];
+    const fromE = Math.min(S.emerg, amt);
+    const rest = amt - fromE;
+    S.emerg -= fromE;
+    S.saldo -= rest;
+    S.stats.imprevCassa += rest;
+    let note;
+    if (rest === 0) note = 'Coperto tutto dal fondo emergenze.';
+    else if (fromE > 0) note = `${eur(fromE)} dal fondo emergenze, ${eur(rest)} dalla cassa.`;
+    else note = 'Pagato dalla cassa. Un fondo emergenze l’avrebbe assorbito.';
+    updateHUD();
+    sfx('hit');
+    showBanner({ kicker: 'Imprevisto', title: label, amount: eur(amt, '-'), note, tone: 'imprevisto' }, BANNER, () => { cover(); });
+  }
+
+  // Se la cassa va sotto zero si attinge ai fondi; se non bastano, partita finita.
+  function cover() {
+    if (S.saldo >= 0) return true;
+    let need = -S.saldo;
+    const fromE = Math.min(S.emerg, need);
+    S.emerg -= fromE; need -= fromE;
+    const fromA = Math.min(S.ann, need);
+    S.ann -= fromA; need -= fromA;
+    S.saldo = -need;
+    const took = fromE + fromA;
+    if (took > 0) toast(`Cassa sotto zero: ${eur(took)} presi dai fondi`, 'warn');
+    updateHUD();
+    if (S.saldo < 0) { gameOver(); return false; }
+    return true;
+  }
+
+  function gameOver() {
+    S.over = true;
+    S.won = false;
+    sfx('lose');
+    showBanner({ kicker: 'Fine della partita', title: `In rosso a ${MONTHS[S.month].toLowerCase()}`, amount: eur(S.saldo), note: 'I fondi non bastano a coprire il buco di cassa.', tone: 'rosso' }, 1.8, () => showResult());
+  }
+
+  function finish() {
+    S.over = true;
+    S.won = true;
+    sfx('win');
+    const saved = S.saldo + S.ann + S.emerg;
+    showBanner({ kicker: 'Dicembre chiuso', title: 'Sei arrivato a fine anno', amount: eur(saved), note: 'Messi da parte tra cassa e fondi.', tone: 'win' }, 1.6, () => showResult());
+  }
+
+  /* ---------- Gettoni ---------- */
+  function chipText(type) {
+    const m = S.month;
+    if (type === 'income') { const [l, a] = pick(POOLS.income); return [l, a, eur(a, '+')]; }
+    if (type === 'love') { const [l, a] = pick(LOVES[loveKey].items); return [l, a, eur(a, '-')]; }
+    if (type === 'junk') { const [l, a] = pick(m === 11 ? POOLS.junk.concat(POOLS.junkDec, POOLS.junkDec) : POOLS.junk); return [l, a, eur(a, '-')]; }
+    if (type === 'rate') { const [l, a] = pick(POOLS.rate); return [l, a, eur(a, '-') + '/mese']; }
+    if (type === 'ann') return ['Spese annuali', QUOTA, eur(QUOTA, '+')];
+    if (type === 'emerg') return ['Fondo emergenze', QUOTA, eur(QUOTA, '+')];
+    return ['I fondi si riempiono da soli', 0, 'Automatizza'];
+  }
+
+  function spawn(forced) {
+    const m = S.month;
+    let type = forced;
+    if (!type) {
+      const w = { income: 22, love: 18, junk: 28 + (m === 11 ? 8 : 0), rate: m >= 1 ? 10 : 0, ann: 13, emerg: 10 };
+      let r = Math.random() * Object.values(w).reduce((a, b) => a + b, 0);
+      type = 'income';
+      for (const k in w) { r -= w[k]; if (r <= 0) { type = k; break; } }
+    }
+    const [label, amt, amtText] = chipText(type);
+    const icon = type === 'love' || type === 'auto' ? 17 : 0;
+    ctx.font = F_AMT;
+    const wa = ctx.measureText(amtText).width + icon;
+    ctx.font = F_LBL;
+    const wl = ctx.measureText(label).width;
+    const cw = Math.ceil(Math.max(wa, wl) + 24);
+    const ch = 44;
+    let x = 6;
+    for (let i = 0; i < 8; i++) {
+      x = 6 + Math.random() * Math.max(1, W - cw - 12);
+      const clash = S.chips.some((o) => o.y < ch * 1.5 && x < o.x + o.w + 10 && x + cw + 10 > o.x);
+      if (!clash) break;
+    }
+    const v = H * (0.34 + 0.012 * m) * (type === 'auto' ? 0.85 : 0.9 + Math.random() * 0.2);
+    S.chips.push({ type, label, amt, amtText, x, y: -ch, w: cw, h: ch, v });
+  }
+
+  function addFloat(x, y, text, col) { S.floats.push({ x, y, text, col, t: 0 }); }
+  function burst(x, y, col) {
+    if (reduceMotion) return;
+    for (let i = 0; i < 9; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const sp = 60 + Math.random() * 110;
+      S.parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, t: 0, s: 3 + Math.random() * 3, col });
+    }
+  }
+
+  function catchChip(c) {
+    const cx = c.x + c.w / 2;
+    const cy = P.y - 6;
+    const col = C[c.type];
+    switch (c.type) {
+      case 'income':
+        S.saldo += c.amt; S.stats.extra += c.amt; S.stats.entrate += c.amt;
+        addFloat(cx, cy, eur(c.amt, '+'), col); sfx('in');
+        break;
+      case 'love':
+        S.saldo -= c.amt; S.stats.love += c.amt;
+        addFloat(cx, cy, eur(c.amt, '-'), col); sfx('love');
+        break;
+      case 'junk':
+        S.saldo -= c.amt; S.stats.junk += c.amt; S.stats.junkN++;
+        addFloat(cx, cy, eur(c.amt, '-'), col); sfx('out');
+        break;
+      case 'rate':
+        S.rate += c.amt; S.stats.rateN++;
+        addFloat(cx, cy, eur(c.amt, '-') + '/mese', col); sfx('out');
+        toast(`Nuova rata: ${eur(c.amt, '-')} al mese fino a dicembre`, 'out');
+        break;
+      case 'ann':
+      case 'emerg':
+        if (S.saldo >= QUOTA) {
+          S.saldo -= QUOTA;
+          if (c.type === 'ann') { S.ann += QUOTA; bump('pAnn', QUOTA); }
+          else { S.emerg += QUOTA; bump('pEmerg', QUOTA); }
+          addFloat(cx, cy, eur(QUOTA, '+'), col); sfx('save');
+        } else {
+          addFloat(cx, cy, 'Cassa troppo bassa', C.muted);
+        }
+        break;
+      case 'auto':
+        S.auto = true; S.autoMonth = S.month;
+        burst(cx, P.y, col);
+        sfx('auto');
+        showBanner({ kicker: 'Pilota automatico', title: 'Risparmi automatici attivi', amount: `${eur(AUTO_ANN)} + ${eur(AUTO_EMERG)} al mese`, note: 'Da ora, appena arriva lo stipendio, una parte va da sola al fondo spese annuali e al fondo emergenze.', tone: 'auto' }, BANNER + 0.3);
+        updateHUD();
+        return;
+    }
+    burst(cx, P.y, col);
+    updateHUD();
+    if (S.saldo < 0) cover();
+  }
+
+  /* ---------- Ciclo ---------- */
+  function updateFx(dt) {
+    for (const f of S.floats) f.t += dt;
+    S.floats = S.floats.filter((f) => f.t < 0.95);
+    for (const p of S.parts) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 320 * dt; }
+    S.parts = S.parts.filter((p) => p.t < 0.6);
+  }
+
+  function update(dt) {
+    updateFx(dt);
+    if (S.freeze > 0) {
+      S.freeze -= dt;
+      S.freezeAge += dt;
+      if (S.freeze <= 0) {
+        S.freeze = 0;
+        banner.hidden = true;
+        const f = S.afterFreeze;
+        S.afterFreeze = null;
+        if (f) f();
+      }
+      return;
+    }
+    if (S.over) return;
+
+    S.mt += dt;
+    const dir = S.keys.r - S.keys.l;
+    if (dir) P.tx += dir * 520 * dt;
+    P.tx = clamp(P.tx, P.w / 2 + 6, W - P.w / 2 - 6);
+    P.x += (P.tx - P.x) * Math.min(1, dt * 16);
+
+    if (!S.auto && AUTO_OFFERS.includes(S.month) && !S.autoOffered[S.month] && S.mt >= 0.9) {
+      S.autoOffered[S.month] = true;
+      spawn('auto');
+      S.spawnT = Math.max(S.spawnT, 0.45);
+    }
+    S.spawnT -= dt;
+    if (S.spawnT <= 0 && S.mt < MONTH_LEN - 0.5) {
+      spawn();
+      S.spawnT = (0.66 - 0.012 * S.month) * (0.8 + Math.random() * 0.4);
+    }
+
+    const px1 = P.x - P.w / 2, px2 = P.x + P.w / 2;
+    for (let i = S.chips.length - 1; i >= 0; i--) {
+      const c = S.chips[i];
+      c.y += c.v * dt;
+      const hit = c.y + c.h >= P.y + 4 && c.y <= P.y + P.h && c.x < px2 - 4 && c.x + c.w > px1 + 4;
+      if (hit) {
+        S.chips.splice(i, 1);
+        catchChip(c);
+        if (S.over || S.freeze > 0) return;
+      } else if (c.y > H + 4) {
+        S.chips.splice(i, 1);
+        if (c.type === 'auto' && !S.auto && AUTO_OFFERS.some((mm) => mm > S.month)) toast('Automatizza ti è sfuggito: ripasserà più avanti');
+      }
+    }
+
+    if (!S.imprevDone && S.imprevMonths.includes(S.month) && S.mt >= MONTH_LEN * 0.55) {
+      S.imprevDone = true;
+      imprevisto();
+      return;
+    }
+    if (S.mt >= MONTH_LEN) monthEnd();
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+  function spaced(px) { if ('letterSpacing' in ctx) ctx.letterSpacing = px; }
+  function drawLogo(x, y, size, col) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(size / 100, size / 100);
+    ctx.fillStyle = col;
+    ctx.fill(ICON_OUTER);
+    ctx.fill(ICON_INNER);
+    ctx.restore();
+  }
+  function drawHeart(x, y, size, col) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(size / 24, size / 24);
+    ctx.fillStyle = col;
+    ctx.fill(HEART);
+    ctx.restore();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // pagina del libro cassa
+    ctx.fillStyle = C.panel;
+    ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = C.rule;
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.55;
+    for (let y = 44; y < H; y += 30) {
+      ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(W, y + 0.5); ctx.stroke();
+    }
+    ctx.globalAlpha = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(26.5, 0); ctx.lineTo(26.5, H);
+    ctx.moveTo(29.5, 0); ctx.lineTo(29.5, H);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = C.muted;
+    ctx.font = F_HDR;
+    ctx.textBaseline = 'alphabetic';
+    spaced('2px');
+    ctx.textAlign = 'left';
+    ctx.fillText('LIBRO CASSA', 38, 27);
+    ctx.textAlign = 'right';
+    ctx.fillText(MONTHS[S.month].toUpperCase(), W - 12, 27);
+    spaced('0px');
+
+    // gettoni
+    for (const c of S.chips) {
+      const col = C[c.type];
+      roundRect(c.x, c.y, c.w, c.h, 10);
+      if (c.type === 'auto') {
+        const g = ctx.createLinearGradient(0, c.y, 0, c.y + c.h);
+        g.addColorStop(0, C.paper);
+        g.addColorStop(1, C.silver);
+        ctx.fillStyle = g; ctx.fill();
+        drawLogo(c.x + 12, c.y + 7, 13, C.ink);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = C.ink;
+        ctx.font = F_AMT;
+        ctx.fillText(c.amtText, c.x + 12 + 17, c.y + 19);
+        ctx.font = F_LBL;
+        ctx.fillText(c.label, c.x + 12, c.y + 35);
+        continue;
+      }
+      ctx.fillStyle = C.ink; ctx.fill();
+      ctx.fillStyle = rgba(col, 0.16); ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = col;
+      if (c.type === 'rate') ctx.setLineDash([5, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.textAlign = 'left';
+      let tx = c.x + 12;
+      if (c.type === 'love') { drawHeart(tx - 1, c.y + 7, 14, col); tx += 17; }
+      ctx.fillStyle = col;
+      ctx.font = F_AMT;
+      ctx.fillText(c.amtText, tx, c.y + 19);
+      ctx.fillStyle = C.paper;
+      ctx.globalAlpha = 0.82;
+      ctx.font = F_LBL;
+      ctx.fillText(c.label, c.x + 12, c.y + 35);
+      ctx.globalAlpha = 1;
+    }
+
+    // la cassa
+    const bx = P.x - P.w / 2, by = P.y;
+    if (S.running && S.saldo < 250) {
+      roundRect(bx - 3, by - 3, P.w + 6, P.h + 6, 13);
+      ctx.strokeStyle = rgba(C.junk, 0.7); ctx.lineWidth = 2; ctx.stroke();
+    }
+    const g = ctx.createLinearGradient(0, by, 0, by + P.h);
+    g.addColorStop(0, C.paper);
+    g.addColorStop(1, C.silver);
+    roundRect(bx, by, P.w, P.h, 10);
+    ctx.fillStyle = g; ctx.fill();
+    ctx.fillStyle = rgba(C.ink, 0.5);
+    roundRect(bx + P.w * 0.32, by + 6, P.w * 0.36, 4, 2); ctx.fill();
+    drawLogo(bx + 11, by + P.h / 2 - 7, 18, C.ink);
+    ctx.fillStyle = C.ink;
+    ctx.font = F_BOX;
+    spaced('1.5px');
+    ctx.textAlign = 'left';
+    ctx.fillText('CASSA', bx + 36, by + P.h / 2 + 8);
+    spaced('0px');
+
+    // effetti
+    for (const p of S.parts) {
+      ctx.globalAlpha = 1 - p.t / 0.6;
+      ctx.fillStyle = p.col;
+      ctx.fillRect(p.x - p.s / 2, p.y - p.s / 2, p.s, p.s);
+    }
+    ctx.globalAlpha = 1;
+    ctx.textAlign = 'center';
+    ctx.font = F_FLOAT;
+    for (const f of S.floats) {
+      ctx.globalAlpha = 1 - f.t / 0.95;
+      ctx.fillStyle = f.col;
+      ctx.fillText(f.text, clamp(f.x, 60, W - 60), f.y - 40 * f.t);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  let lastTs = 0;
+  function frame(ts) {
+    const dt = Math.min(0.05, Math.max(0, (ts - lastTs) / 1000));
+    lastTs = ts;
+    if (S.running && !S.paused) {
+      update(dt);
+      updateProgress();
+    }
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  function resize() {
+    const r = field.getBoundingClientRect();
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = Math.max(200, r.width);
+    H = Math.max(200, r.height);
+    cv.width = Math.round(W * DPR);
+    cv.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    P.w = clamp(Math.round(W * 0.25), 86, 104);
+    P.y = H - P.h - 18;
+    P.x = clamp(P.x, P.w / 2 + 6, W - P.w / 2 - 6);
+    P.tx = clamp(P.tx, P.w / 2 + 6, W - P.w / 2 - 6);
+    draw();
+  }
+
+  /* ---------- Partita ---------- */
+  function startGame(key) {
+    if (key && LOVES[key]) loveKey = key;
+    store('afm_love', loveKey);
+    initAudio();
+    clearToasts();
+    banner.hidden = true;
+    S = freshState(true);
+    last.saldo = last.ann = last.emerg = last.rate = last.love = null;
+    $('loveName').textContent = LOVES[loveKey].hud;
+    P.x = P.tx = W / 2;
+    $('startScreen').hidden = true;
+    $('resultScreen').hidden = true;
+    $('pauseScreen').hidden = true;
+    $('shareStatus').textContent = '';
+    $('copyFallback').hidden = true;
+    monthStart(0);
+    updateProgress();
+    field.focus({ preventScroll: true });
+  }
+
+  function setPaused(p) {
+    if (!S.running || S.over) return;
+    S.paused = p;
+    $('pauseScreen').hidden = !p;
+    if (p) $('btnResume').focus({ preventScroll: true });
+  }
+
+  function profileFor(saved, waste) {
+    const love = S.stats.love;
+    const per = LOVES[loveKey].per;
+    const loveTxt = love > 0 ? ` e ${eur(love)} spesi ${per}` : '';
+    if (!S.won) {
+      const mese = MONTHS[S.month].toLowerCase();
+      return {
+        title: `In rosso a ${mese}`,
+        total: `La cassa è andata sotto zero a ${mese}.`,
+        desc: 'Non è colpa dello stipendio: con 1.700 € al mese ce la si fa. Serve un piano per le spese che arrivano ogni anno e per gli imprevisti. Riprova: ora sai dove guardare.'
+      };
+    }
+    const total = `Hai chiuso l’anno con ${eur(saved)} da parte${loveTxt}.`;
+    if (saved >= 3200 && waste <= 1300 && love > 0) {
+      return { title: 'CFO di famiglia', total, desc: 'Hai speso senza sensi di colpa per ciò che ami, tagliato il resto e messo da parte prima che arrivassero le spese. Fuori dal gioco funziona allo stesso modo.' };
+    }
+    if (saved >= 2000) {
+      return { title: 'Sulla buona strada', total, desc: 'Sei arrivato a dicembre con un margine. Con qualche regola in più, l’anno prossimo metti da parte molto di più.' };
+    }
+    return { title: 'Al pelo', total, desc: 'Ce l’hai fatta per un soffio. Lo stipendio bastava: è mancato il piano.' };
+  }
+
+  function chooseTip(profileTitle) {
+    const st = S.stats;
+    const lostOnBill = !S.won && EVENTS[S.month] && EVENTS[S.month].kind === 'annual';
+    if (S.won && st.love === 0) return { ...TIPS.love, impact: '' };
+    const c = [
+      { k: 'annuali', v: st.annCassa * (lostOnBill ? 2 : 0.8), impact: `Hai pagato ${eur(st.annCassa)} di spese annuali direttamente dalla cassa.` },
+      { k: 'spreco', v: st.junk, impact: `Le spese inutili ti sono costate ${eur(st.junk)}.` },
+      { k: 'rate', v: st.rateSpent * 1.2, impact: `Le rate ti sono costate ${eur(st.rateSpent)} quest’anno.` },
+      { k: 'emerg', v: st.imprevCassa, impact: `Gli imprevisti ti hanno preso ${eur(st.imprevCassa)} dalla cassa.` },
+      { k: 'auto', v: st.leak * (S.auto ? 0.5 : 0.9), impact: `I soldi fermi in cassa si sono consumati in ${eur(st.leak)} di spese non tracciate.` }
+    ].sort((a, b) => b.v - a.v);
+    if (profileTitle === 'CFO di famiglia' || c[0].v < 100) return { ...TIPS.ok, impact: '' };
+    return { ...TIPS[c[0].k], impact: c[0].impact, k: c[0].k };
+  }
+
+  const CONTACT = { wa: '393288038318', mail: 'pasqualedecaro@live.it', cal: 'https://cal.com/pasqualedecaro/cfo' };
+  const WEAK = { annuali: 'le spese annuali', spreco: 'le spese inutili', rate: 'le rate', emerg: 'gli imprevisti', auto: 'i soldi fermi sul conto' };
+  const WHO = {
+    dipendente:     { msg: 'lavoro come dipendente',            note: 'Dipendente' },
+    professionista: { msg: 'lavoro come libero professionista', note: 'Libero professionista' },
+    imprenditore:   { msg: 'sono titolare di un’impresa',  note: 'Imprenditore' }
+  };
+  let who = store('afm_who');
+  if (!WHO[who]) who = null;
+  let lastContact = { title: '', k: undefined };
+  function setContactLinks() {
+    const { title, k } = lastContact;
+    const weak = WEAK[k];
+    const w = WHO[who];
+    const msg = `Ciao Pasquale, ${w ? w.msg + '. Ho' : 'ho'} giocato a «La cassa di famiglia» e ho ottenuto il profilo «${title}»${weak ? `: il mio punto debole sono ${weak}` : ''}. Vorrei qualche consiglio per mettere in ordine i conti di casa.`;
+    const note = `Arrivo dal gioco «La cassa di famiglia». Profilo: ${title}.${w ? ` Lavoro: ${w.note}.` : ''}`;
+    $('ctWa').href = `https://wa.me/${CONTACT.wa}?text=${encodeURIComponent(msg)}`;
+    $('ctMail').href = `mailto:${CONTACT.mail}?subject=${encodeURIComponent('Consigli dopo «La cassa di famiglia»')}&body=${encodeURIComponent(msg)}`;
+    $('ctCal').href = `${CONTACT.cal}?notes=${encodeURIComponent(note)}`;
+  }
+  function renderWho() {
+    document.querySelectorAll('.who-opt').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.who === who)));
+    $('contactOpts').hidden = !who;
+  }
+  function resetContact() {
+    $('contactPanel').hidden = true;
+    $('btnAdvice').setAttribute('aria-expanded', 'false');
+    $('contactStatus').textContent = '';
+    renderWho();
+    setContactLinks();
+  }
+
+  /* ---------- Immagine per le storie (1080 × 1920) ---------- */
+  const SCRIPT = '"Sacramento","Segoe Script","Brush Script MT",cursive';
+  let lastResult = null;
+  let story = { url: null, file: null };
+  function fitFont(g, text, weight, size, family, maxW) {
+    let s = size;
+    g.font = `${weight} ${s}px ${family}`;
+    while (s > 20 && g.measureText(text).width > maxW) { s -= 4; g.font = `${weight} ${s}px ${family}`; }
+    return s;
+  }
+  function wrapLines(g, text, maxW) {
+    const words = text.split(' ');
+    const lines = [];
+    let line = '';
+    for (const wd of words) {
+      const t = line ? line + ' ' + wd : wd;
+      if (g.measureText(t).width > maxW && line) { lines.push(line); line = wd; } else line = t;
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+  async function drawStory() {
+    const r = lastResult;
+    try {
+      await Promise.all([
+        document.fonts.load(`600 120px ${FONT}`), document.fonts.load(`300 30px ${FONT}`),
+        document.fonts.load(`500 34px ${FONT}`), document.fonts.load(`90px ${SCRIPT}`)
+      ]);
+    } catch (e) { /* si usano i caratteri di riserva */ }
+    const c = document.createElement('canvas');
+    c.width = 1080; c.height = 1920;
+    const g = c.getContext('2d');
+    const sp = (px) => { if ('letterSpacing' in g) g.letterSpacing = px; };
+    const X = 132, MAXW = 1080 - X * 2;
+    g.fillStyle = C.ink; g.fillRect(0, 0, 1080, 1920);
+    g.strokeStyle = C.rule; g.lineWidth = 2; g.globalAlpha = 0.45;
+    for (let y = 120; y < 1920; y += 64) { g.beginPath(); g.moveTo(0, y + 1); g.lineTo(1080, y + 1); g.stroke(); }
+    g.globalAlpha = 0.85;
+    g.beginPath(); g.moveTo(71, 0); g.lineTo(71, 1920); g.moveTo(79, 0); g.lineTo(79, 1920); g.stroke();
+    g.globalAlpha = 1;
+    g.textBaseline = 'alphabetic'; g.textAlign = 'left';
+
+    // marchio
+    g.save(); g.translate(X, 262); g.scale(1.06, 1.06); g.fillStyle = C.silver; g.fill(ICON_OUTER); g.fill(ICON_INNER); g.restore();
+    g.fillStyle = C.paper; g.font = `92px ${SCRIPT}`;
+    g.fillText('Studio De Caro', X + 140, 340);
+    const nameW = g.measureText('Studio De Caro').width;
+    g.fillStyle = C.silver; g.globalAlpha = 0.75; g.fillRect(X + 134, 360, nameW + 14, 4); g.globalAlpha = 1;
+    g.font = `300 30px ${FONT}`; sp('2px');
+    g.fillText('tax and corporate consulting', X + 140, 408);
+
+    // titolo e profilo
+    g.font = `500 34px ${FONT}`; sp('8px'); g.fillStyle = C.ann;
+    g.fillText('LA CASSA DI FAMIGLIA', X, 640);
+    sp('0px');
+    g.font = `600 124px ${FONT}`; g.fillStyle = C.paper;
+    const lines = wrapLines(g, r.title, MAXW);
+    let y = 790;
+    lines.forEach((ln, i) => g.fillText(ln, X, y + i * 134));
+    y += (lines.length - 1) * 134 + 170;
+
+    // il numero
+    g.font = `400 48px ${FONT}`; g.fillStyle = C.silver;
+    if (r.won) {
+      g.fillText('Ho messo da parte', X, y);
+      y += 196;
+      fitFont(g, eur(r.saved), 600, 200, FONT, MAXW);
+      g.fillStyle = C.income; g.fillText(eur(r.saved), X, y);
+      if (r.love > 0) {
+        y += 104;
+        const t = `e ho speso ${eur(r.love)} ${r.per}`;
+        fitFont(g, t, 400, 46, FONT, MAXW - 62);
+        g.save(); g.translate(X, y - 38); g.scale(46 / 24, 46 / 24); g.fillStyle = C.love; g.fill(HEART); g.restore();
+        g.fillStyle = C.love; g.fillText(t, X + 62, y);
+      }
+    } else {
+      g.fillText('Mesi superati', X, y);
+      y += 196;
+      g.font = `600 200px ${FONT}`; g.fillStyle = C.junk;
+      g.fillText(`${r.month} su 12`, X, y);
+    }
+
+    // invito
+    const invite = 'Fai meglio di me?';
+    g.fillStyle = C.paper;
+    fitFont(g, invite, 600, 66, FONT, MAXW);
+    g.fillText(invite, X, 1570);
+    fitFont(g, 'Gioca su decaropasquale.github.io/playable', 400, 38, FONT, MAXW);
+    g.fillStyle = C.muted;
+    g.fillText('Gioca su decaropasquale.github.io/playable', X, 1640);
+    return c;
+  }
+  function resetStory() {
+    if (story.url) { try { URL.revokeObjectURL(story.url); } catch (e) {} }
+    story = { url: null, file: null };
+    $('storyPreview').hidden = true;
+    $('btnStory').hidden = false;
+    $('btnStory').disabled = false;
+    $('btnStory').textContent = 'Crea l’immagine per le storie';
+  }
+  async function makeStory() {
+    const btn = $('btnStory');
+    btn.disabled = true;
+    btn.textContent = 'Preparo l’immagine…';
+    const c = await drawStory();
+    c.toBlob((blob) => {
+      if (!blob) { btn.disabled = false; btn.textContent = 'Riprova a creare l’immagine'; return; }
+      story.url = URL.createObjectURL(blob);
+      try { story.file = new File([blob], 'la-cassa-di-famiglia.png', { type: 'image/png' }); } catch (e) { story.file = null; }
+      $('storyImg').src = story.url;
+      const canShareFile = !inFrame && story.file && navigator.canShare && navigator.canShare({ files: [story.file] });
+      $('btnStoryShare').hidden = !canShareFile;
+      $('btnStoryDownload').hidden = inFrame;
+      $('storyHint').textContent = inFrame
+        ? 'Tieni premuto sull’immagine per salvarla, poi pubblicala nelle storie.'
+        : canShareFile ? 'Scegli Instagram, LinkedIn o WhatsApp dal menu di condivisione.' : 'Scaricala e pubblicala nelle storie.';
+      btn.hidden = true;
+      $('storyPreview').hidden = false;
+      $('storyPreview').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+    }, 'image/png');
+  }
+
+  let shareText = '';
+  function showResult() {
+    S.running = false;
+    banner.hidden = true;
+    clearToasts();
+    const st = S.stats;
+    const saved = S.saldo + S.ann + S.emerg;
+    const waste = st.junk + st.rateSpent + st.leak;
+    const pr = profileFor(saved, waste);
+    $('rProfile').textContent = pr.title;
+    $('rTotal').textContent = pr.total;
+    $('rDesc').textContent = pr.desc;
+
+    const per = LOVES[loveKey].per;
+    const rows = [
+      S.won ? ['Messo da parte', eur(saved), 'stat--save'] : ['Mesi superati', `${S.month} di 12`, 'stat--neg'],
+      ['Entrate dell’anno', eur(st.entrate), ''],
+      [`Speso ${per}`, eur(st.love), 'stat--ama'],
+      ['Sprecato', eur(waste), waste > 0 ? 'stat--neg' : '']
+    ];
+    const dl = $('rStats');
+    dl.textContent = '';
+    for (const [k, v, cls] of rows) {
+      const d = document.createElement('div');
+      d.className = 'stat' + (cls ? ' ' + cls : '');
+      const dt = document.createElement('dt'); dt.textContent = k;
+      const dd = document.createElement('dd'); dd.textContent = v;
+      d.append(dt, dd);
+      dl.appendChild(d);
+    }
+
+    const tip = chooseTip(pr.title);
+    $('tipTitle').textContent = tip.h;
+    $('tipBody').textContent = tip.b;
+    $('tipImpact').hidden = !tip.impact;
+    $('tipImpact').textContent = tip.impact;
+    lastContact = { title: pr.title, k: tip.k };
+    resetContact();
+    lastResult = { won: S.won, saved, title: pr.title, love: st.love, per, month: S.month };
+    resetStory();
+
+    const rec = $('rRecord');
+    const best = parseInt(store('afm_best2') || '', 10);
+    rec.textContent = '';
+    if (S.won) {
+      if (!Number.isFinite(best) || saved > best) {
+        if (Number.isFinite(best)) rec.textContent = `Nuovo record. Il precedente era ${eur(best)}.`;
+        store('afm_best2', Math.round(saved));
+      } else {
+        rec.textContent = `Il tuo record: ${eur(best)} da parte.`;
+      }
+    } else if (Number.isFinite(best)) {
+      rec.textContent = `Il tuo record: ${eur(best)} da parte.`;
+    }
+    rec.hidden = !rec.textContent;
+
+    shareText = S.won
+      ? `Ho chiuso l'anno con ${eur(saved)} messi da parte: profilo «${pr.title}». È «La cassa di famiglia», il gioco di Studio De Caro. Fai meglio di me?`
+      : `La mia cassa ha retto ${S.month} mesi su 12. È «La cassa di famiglia», il gioco di Studio De Caro. Fai meglio di me?`;
+
+    const rs = $('resultScreen');
+    rs.hidden = false;
+    rs.scrollTop = 0;
+    $('rProfile').focus({ preventScroll: true });
+  }
+
+  function copyText(text) {
+    const status = $('shareStatus');
+    const fb = $('copyFallback');
+    const fallback = () => {
+      fb.value = text;
+      fb.hidden = false;
+      fb.focus();
+      fb.select();
+      status.textContent = 'Copia il testo qui sopra e incollalo dove vuoi.';
+    };
+    try {
+      navigator.clipboard.writeText(text).then(() => {
+        status.textContent = 'Risultato copiato. Incollalo su LinkedIn, Instagram o WhatsApp.';
+      }, fallback);
+    } catch (e) { fallback(); }
+  }
+  async function share() {
+    const url = inFrame ? '' : location.href.split('#')[0];
+    const text = shareText + (url ? ' ' + url : '');
+    if (!inFrame && navigator.share) {
+      try { await navigator.share({ title: 'La cassa di famiglia', text: shareText, url }); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    copyText(text);
+  }
+
+  /* ---------- Comandi ---------- */
+  function setTarget(e) {
+    const r = field.getBoundingClientRect();
+    P.tx = e.clientX - r.left;
+  }
+  field.addEventListener('pointerdown', (e) => {
+    if (!S.running || S.paused) return;
+    initAudio();
+    if (S.freeze > 0 && S.freezeAge > 0.4) S.freeze = 0.001; // tocca per saltare il messaggio
+    try { field.setPointerCapture(e.pointerId); } catch (err) {}
+    setTarget(e);
+  });
+  field.addEventListener('pointermove', (e) => {
+    if (!S.running || S.paused) return;
+    if (e.pointerType === 'mouse' || e.buttons || e.pressure > 0) setTarget(e);
+  });
+  window.addEventListener('keydown', (e) => {
+    const k = e.key;
+    if (S.running && !S.paused && (k === 'ArrowLeft' || k === 'a' || k === 'A')) { S.keys.l = 1; e.preventDefault(); }
+    else if (S.running && !S.paused && (k === 'ArrowRight' || k === 'd' || k === 'D')) { S.keys.r = 1; e.preventDefault(); }
+    else if (k === 'Escape' || k === 'p' || k === 'P') { if (S.running && !S.over) setPaused(!S.paused); }
+  });
+  window.addEventListener('keyup', (e) => {
+    const k = e.key;
+    if (k === 'ArrowLeft' || k === 'a' || k === 'A') S.keys.l = 0;
+    if (k === 'ArrowRight' || k === 'd' || k === 'D') S.keys.r = 0;
+  });
+  window.addEventListener('blur', () => { S.keys.l = S.keys.r = 0; });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && S.running && !S.over && !S.paused) setPaused(true);
+  });
+
+  $('choices').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-love]');
+    if (b) startGame(b.dataset.love);
+  });
+  $('btnAgain').addEventListener('click', () => startGame());
+  $('btnRestart').addEventListener('click', () => startGame());
+  $('btnResume').addEventListener('click', () => { initAudio(); setPaused(false); });
+  $('btnPause').addEventListener('click', () => { if (S.running && !S.over) setPaused(!S.paused); });
+  $('btnSound').addEventListener('click', () => {
+    muted = !muted;
+    store('afm_mute', muted ? '1' : '0');
+    if (!muted) initAudio();
+    renderSound();
+  });
+  $('btnShare').addEventListener('click', share);
+  $('btnAdvice').addEventListener('click', () => {
+    const panel = $('contactPanel');
+    panel.hidden = false;
+    $('btnAdvice').setAttribute('aria-expanded', 'true');
+    renderWho();
+    panel.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+    (who ? $('ctCal') : document.querySelector('.who-opt')).focus({ preventScroll: true });
+  });
+  $('whoGroup').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-who]');
+    if (!b) return;
+    who = b.dataset.who;
+    store('afm_who', who);
+    renderWho();
+    setContactLinks();
+    $('contactOpts').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest' });
+  });
+  $('btnStory').addEventListener('click', () => { if (lastResult) makeStory(); });
+  $('btnStoryShare').addEventListener('click', async () => {
+    if (!story.file) return;
+    try { await navigator.share({ files: [story.file], text: shareText }); }
+    catch (e) { if (!e || e.name !== 'AbortError') $('storyHint').textContent = 'Condivisione non riuscita: scarica l’immagine e pubblicala dall’app.'; }
+  });
+  $('btnStoryDownload').addEventListener('click', () => {
+    if (!story.url) return;
+    const a = document.createElement('a');
+    a.href = story.url;
+    a.download = 'la-cassa-di-famiglia.png';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  });
+  $('btnCopyMail').addEventListener('click', () => {
+    const st = $('contactStatus');
+    const done = () => { st.textContent = `Indirizzo copiato: ${CONTACT.mail}`; };
+    const fail = () => { st.textContent = `L'indirizzo è ${CONTACT.mail}`; };
+    try { navigator.clipboard.writeText(CONTACT.mail).then(done, fail); } catch (e) { fail(); }
+  });
+
+  /* ---------- Avvio ---------- */
+  const savedLove = store('afm_love');
+  if (savedLove && LOVES[savedLove]) loveKey = savedLove;
+  $('loveName').textContent = LOVES[loveKey].hud;
+  field.tabIndex = -1;
+  renderSound();
+  updateMonthUI();
+  updateHUD();
+  updateProgress();
+  if ('ResizeObserver' in window) new ResizeObserver(resize).observe(field);
+  else window.addEventListener('resize', resize);
+  resize();
+  if (document.fonts && document.fonts.load) {
+    Promise.all([document.fonts.load(F_AMT), document.fonts.load(F_LBL)]).then(draw, () => {});
+  }
+  requestAnimationFrame((ts) => { lastTs = ts; requestAnimationFrame(frame); });
+})();
+</script>
+</body>
+</html>
